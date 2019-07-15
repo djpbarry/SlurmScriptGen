@@ -69,19 +69,7 @@ public class Slurm_Script_Generator {
             jobListWriter = new OutputStreamWriter(new FileOutputStream(jobListFile), GenVariables.ISO);
             int jobCount = 0;
 
-            ArrayList<String> files = BioFormatsFileLister.obtainValidFileList(inputDir);
-            for (String f : files) {
-                BioFormatsImg img = new BioFormatsImg();
-                try {
-                    img.setId(String.format("%s%s%s", inputDir, File.separator, f));
-                } catch (IOException | FormatException e) {
-                    GenUtils.logError(e, String.format("Failed to initialise %s", f));
-                }
-                int nSeries = img.getSeriesCount();
-                for (int s = 0; s < nSeries; s++) {
-                    jobListWriter.write(String.format("%d, %s, %d\n", jobCount++, img.getId(), s));
-                }
-            }
+            buildJobList(inputDir, jobCount, jobListWriter);
 
             scriptWriter.write("#!/bin/bash\n\n");
             scriptWriter.write("#SBATCH --job-name=fiji-giani\n");
@@ -92,7 +80,7 @@ public class Slurm_Script_Generator {
             scriptWriter.write(String.format("#SBATCH --array=0-%d\n\n", jobCount - 1));
 //            scriptWriter.write("#SBATCH --partition=hmem\n");
 //            scriptWriter.write("#SBATCH --output=/home/camp/barryd/working/barryd/hpc/output/res.txt\n\n");
-            scriptWriter.write("ml Java/1.8.0_202\n");
+            scriptWriter.write("ml Java/1.9.0.4\n");
             scriptWriter.write(String.format("srun --output=%s/giani_log_ID_$SLURM_ARRAY_TASK_ID.txt java -jar %s %s %s $SLURM_ARRAY_TASK_ID\n",
                     outputLocation, gianiJarLocation, jobListFile.getAbsolutePath(), propFileLocation));
 
@@ -115,5 +103,27 @@ public class Slurm_Script_Generator {
             return false;
         }
         return true;
+    }
+
+    private void buildJobList(File inputDir, int jobCount, Writer jobListWriter) throws IOException {
+        File[] files = inputDir.listFiles();
+        for (File file : files) {
+            if (file.isDirectory()) {
+                buildJobList(file, jobCount, jobListWriter);
+                ArrayList<String> validFiles = BioFormatsFileLister.obtainValidFileList(file);
+                for (String f : validFiles) {
+                    BioFormatsImg img = new BioFormatsImg();
+                    try {
+                        img.setId(String.format("%s%s%s", file.getAbsolutePath(), File.separator, f));
+                    } catch (IOException | FormatException e) {
+                        GenUtils.logError(e, String.format("Failed to initialise %s", f));
+                    }
+                    int nSeries = img.getSeriesCount();
+                    for (int s = 0; s < nSeries; s++) {
+                        jobListWriter.write(String.format("%d, %s, %d\n", jobCount++, img.getId(), s));
+                    }
+                }
+            }
+        }
     }
 }
