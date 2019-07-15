@@ -120,7 +120,7 @@ public class Slurm_Script_Generator {
                     }
                     int nSeries = img.getSeriesCount();
                     for (int s = 0; s < nSeries; s++) {
-                        jobListWriter.write(String.format("%d, %s, %d\n", jobCount++, img.getId(), s));
+                        jobListWriter.write(String.format("%d, %s, %d, %s\n", jobCount++, img.getId(), s, img.getSeriesName(s)));
                     }
                 }
             }
