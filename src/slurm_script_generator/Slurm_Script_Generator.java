@@ -76,12 +76,12 @@ public class Slurm_Script_Generator {
 //            scriptWriter.write("#SBATCH --ntasks=1\n");
             scriptWriter.write("#SBATCH --time=1:00:00\n");
 //            scriptWriter.write("#SBATCH --mem-per-cpu=128G\n");
-            scriptWriter.write("#SBATCH --cpus-per-task=16\n");
-            scriptWriter.write(String.format("#SBATCH --array=0-%d\n\n", jobCount - 1));
+            scriptWriter.write("#SBATCH --cpus-per-task=32\n");
+            scriptWriter.write(String.format("#SBATCH --array=0-%d\n\n", (jobCount - 1)));
 //            scriptWriter.write("#SBATCH --partition=hmem\n");
 //            scriptWriter.write("#SBATCH --output=/home/camp/barryd/working/barryd/hpc/output/res.txt\n\n");
             scriptWriter.write("ml Java/1.9.0.4\n");
-            scriptWriter.write(String.format("srun --output=%s/giani_log_ID_$SLURM_ARRAY_TASK_ID.txt java -jar %s %s %s $SLURM_ARRAY_TASK_ID\n",
+            scriptWriter.write(String.format("srun --output=%s/giani_log_ID_$SLURM_ARRAY_TASK_ID.txt java -Xmx127000m -jar %s %s %s $SLURM_ARRAY_TASK_ID\n",
                     outputLocation, gianiJarLocation, jobListFile.getAbsolutePath(), propFileLocation));
 
             scriptWriter.close();
