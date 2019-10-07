@@ -15,6 +15,7 @@ public class Main {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
+        System.setProperty("java.awt.headless", "true");
         (new Slurm_Script_Generator(args[0], args[1], args[2], args[3])).run();
         System.exit(0);
     }

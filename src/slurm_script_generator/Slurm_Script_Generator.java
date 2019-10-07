@@ -67,9 +67,8 @@ public class Slurm_Script_Generator {
             }
             scriptWriter = new OutputStreamWriter(new FileOutputStream(scriptFile), GenVariables.ISO);
             jobListWriter = new OutputStreamWriter(new FileOutputStream(jobListFile), GenVariables.ISO);
-            int jobCount = 0;
 
-            buildJobList(inputDir, jobCount, jobListWriter);
+            int jobCount = buildJobList(inputDir, 0, jobListWriter);
 
             scriptWriter.write("#!/bin/bash\n\n");
             scriptWriter.write("#SBATCH --job-name=fiji-giani\n");
@@ -105,11 +104,12 @@ public class Slurm_Script_Generator {
         return true;
     }
 
-    private void buildJobList(File inputDir, int jobCount, Writer jobListWriter) throws IOException {
+    private int buildJobList(File inputDir, int jobCount, Writer jobListWriter) throws IOException {
         File[] files = inputDir.listFiles();
+        int count = jobCount;
         for (File file : files) {
             if (file.isDirectory()) {
-                buildJobList(file, jobCount, jobListWriter);
+                count = buildJobList(file, count, jobListWriter);
                 ArrayList<String> validFiles = BioFormatsFileLister.obtainValidFileList(file);
                 for (String f : validFiles) {
                     BioFormatsImg img = new BioFormatsImg();
@@ -120,10 +120,11 @@ public class Slurm_Script_Generator {
                     }
                     int nSeries = img.getSeriesCount();
                     for (int s = 0; s < nSeries; s++) {
-                        jobListWriter.write(String.format("%d, %s, %d, %s\n", jobCount++, img.getId(), s, img.getSeriesName(s)));
+                        jobListWriter.write(String.format("%d, %s, %d, %s\n", count++, img.getId(), s, img.getSeriesName(s)));
                     }
                 }
             }
         }
+        return count;
     }
 }
